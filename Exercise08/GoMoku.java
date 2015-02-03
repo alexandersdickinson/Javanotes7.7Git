@@ -14,6 +14,9 @@ public class GoMoku extends JPanel{
 	private final int SIZE = 450;
 	private int turn = 1;
 	private boolean victory = false;
+	private JButton newGame;
+	private JButton resign;
+	private Board board;
 	
 	public static void main(String[] args){
 		
@@ -29,7 +32,8 @@ public class GoMoku extends JPanel{
 	public GoMoku(){
 		
 		setLayout(new BorderLayout());
-		add(new Board(), BorderLayout.CENTER);
+		board = new Board();
+		add(board, BorderLayout.CENTER);
 		add(new Buttons(), BorderLayout.SOUTH);
 		
 	}
@@ -52,7 +56,7 @@ public class GoMoku extends JPanel{
 					int x, y;
 					x = evt.getX() / (SIZE/15);
 					y = evt.getY() / (SIZE/15);
-					if(pieces[x][y] == null){
+					if(pieces[x][y] == null && !victory){
 						
 						pieces[x][y] = turn % 2 == 0 ? false:true;
 						turn++;
@@ -61,7 +65,7 @@ public class GoMoku extends JPanel{
 					
 					if(turn >= 10){//check for five in a row. Before 10 turns, having five pieces in a row is impossible.
 						
-						for(int col = 0; col < pieces.length; col++){
+						fiveRow: for(int col = 0; col < pieces.length; col++){
 							
 							for(int row = 0; row < pieces[col].length; row++){
 								
@@ -77,8 +81,8 @@ public class GoMoku extends JPanel{
 										lineUp++;
 									}//above right and below left
 									
-									lineEndX = col + lineUp;
-									lineEndY = row - lineUp;
+									lineEndX = col + lineUp - 1;
+									lineEndY = row - lineUp + 1;
 									
 									if(lineUp < 5){
 										lineUp = 1;
@@ -86,7 +90,7 @@ public class GoMoku extends JPanel{
 											lineUp++;
 										}//right and left
 										
-										lineEndX = col + lineUp;
+										lineEndX = col + lineUp - 1;
 										lineEndY = row;
 										
 									}
@@ -98,8 +102,8 @@ public class GoMoku extends JPanel{
 											lineUp++;
 										}//below right and above left
 										
-										lineEndX = col + lineUp;
-										lineEndY = row + lineUp;
+										lineEndX = col + lineUp - 1;
+										lineEndY = row + lineUp - 1;
 										
 									}
 									if(lineUp < 5){
@@ -109,12 +113,16 @@ public class GoMoku extends JPanel{
 										}//below and above
 										
 										lineEndX = col;
-										lineEndY = row + lineUp;
+										lineEndY = row + lineUp - 1;
 										
 									}
 									
-									if(lineUp >= 5)
+									if(lineUp >= 5){
 										victory = true;
+										resign.setEnabled(false);
+										newGame.setEnabled(true);
+										break fiveRow;
+									}
 									
 								}
 								
@@ -133,6 +141,8 @@ public class GoMoku extends JPanel{
 		}
 		
 		public void paintComponent(Graphics g){
+			
+			int offset = SIZE/15/2;
 			
 			super.paintComponent(g);
 			Graphics2D g2 = (Graphics2D)g;
@@ -170,7 +180,7 @@ public class GoMoku extends JPanel{
 			
 			if(victory){
 				g.setColor(Color.RED);
-				g.drawLine(lineStartX * (SIZE/15), lineStartY * (SIZE/15), lineEndX * (SIZE/15), lineEndY * (SIZE/15));
+				g.drawLine(lineStartX * (SIZE/15) + offset, lineStartY * (SIZE/15) + offset, lineEndX * (SIZE/15) + offset, lineEndY * (SIZE/15) + offset);
 			}
 						
 		}
@@ -181,9 +191,35 @@ public class GoMoku extends JPanel{
 		
 		public Buttons(){
 			
-			JButton newGame = new JButton("New Game");
+			newGame = new JButton("New Game");
+			newGame.setEnabled(false);
+			newGame.addActionListener(new ActionListener(){
+				
+				public void actionPerformed(ActionEvent evt){
+					
+					pieces = new Boolean[15][15];
+					turn = 1;
+					victory = false;
+					resign.setEnabled(true);
+					newGame.setEnabled(false);
+					board.repaint();
+					
+				}
+				
+			});
 			add(newGame);
-			JButton resign = new JButton("Resign");
+			
+			resign = new JButton("Resign");
+			resign.addActionListener(new ActionListener(){
+				
+				public void actionPerformed(ActionEvent evt){
+					
+					newGame.setEnabled(true);
+					resign.setEnabled(false);
+					
+				}
+				
+			});
 			add(resign);
 			setBorder(BorderFactory.createEtchedBorder());
 			
